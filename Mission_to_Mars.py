@@ -78,3 +78,6 @@ df
 fact_table_html = df.to_html()
 fact_table_html
 # %%
+browser.quit()
+
+# %%
