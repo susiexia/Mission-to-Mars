@@ -2,12 +2,14 @@
 from splinter import Browser
 from bs4 import BeautifulSoup
 
+import pandas
 # %%
 # initial auto browser
 browser = Browser('chrome', executable_path='chromedriver.exe',headless=False)
 
 # %% [markdown]
 # ## Web Scrape the latest news from NASA Mars news website
+# - (auto visit a website to extract string results)
 # %%
 # use browser auto visit Mars nasa news site
 url = 'https://mars.nasa.gov/news/'
@@ -32,7 +34,7 @@ news_title
 news_p
 # %% [markdown]
 # ## Web Scrape the Featured Images from NASA Mars spaceimages website
-
+# - (navigate brower through links to extract img_url)
 # %%
 # use browser auto visit SpaceImage website
 image_url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
@@ -60,4 +62,19 @@ img_url
 
 # check if a valid img_url
 #browser.visit(img_url)
+# %% [markdown]
+# ## Web Scrape TABLE from Mars facts website
+# - (use Pandas funtions to parse HTML Table)
+# - (No BeautifulSoup used)
+# - (No auto browser used)
+# %%
+fact_url = 'http://space-facts.com/mars/' # only accept http without s
+# extract the first one in list of DFs
+df = pandas.read_html(fact_url)[0]
+df.columns = ['description', 'value']
+df.set_index('description', inplace=True)
+df
+# convert back to HTML string
+fact_table_html = df.to_html()
+fact_table_html
 # %%
