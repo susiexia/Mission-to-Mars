@@ -10,7 +10,20 @@ import datetime as dt
 def scrape_all():
 
     # initial headless driver for deployment
-    browser = Browser('chrome', executable_path='chromedriver.exe',headless=True)
+    browser = Browser('chrome', executable_path='chromedriver.exe',headless=False)
+
+    # ------------------------Challenge-----------------------------
+    # store hemisphere data as a list of dictionaries, one dictionary for each hemisphere data.
+    mars_hemi_lst = list()
+    names = ['Cerberus','Schiaparelli', 'Syrtis Major','Valles Marineris']
+    for name in names:
+        # call scraping fuction for each hemisphere
+        hemi_title, hemi_img_url = mars_hemispheres(browser, name)
+       # add scraped data into dictionary
+        hemi_dict = {"img_url":hemi_img_url, "title": hemi_title}
+        # add each dictionary into list
+        mars_hemi_lst.append(hemi_dict)
+    
     # run all scraping funtions, and store results in dictionary structure
     news_title, news_paragraph = mars_news(browser)
 
@@ -19,12 +32,41 @@ def scrape_all():
       "news_paragraph": news_paragraph,
       "featured_image": featured_image(browser),
       "facts": mars_facts(),
-      "last_modified": dt.datetime.now()            
-            }
-    
+      "last_modified": dt.datetime.now(),
+      "hemi_data": mars_hemi_lst}
+
+
     browser.quit()
 
     return data
+
+
+
+
+# ------------------Chellenge-------------------------------------
+
+# hemi_name: Cerberus, Schiaparelli, Syrtis Major, Valles Marineris
+def mars_hemispheres(browser, hemi_name):
+
+    hemi_url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(hemi_url)
+    # STEP 1: click '... Hemisphere Enhanced'button
+    browser.is_element_present_by_text(f'{hemi_name} Hemisphere Enhanced', wait_time = 1)
+    browser.click_link_by_partial_text(f'{hemi_name} Hemisphere Enhanced')
+    
+    # STEP 2: BeautifulSoup to parse and extract image url
+    soup = BeautifulSoup(browser.html, 'html.parser')
+    try:
+        rel_url = soup.select_one('img.wide-image').get('src')
+        title = soup.select_one('h2.title').text
+    except AttributeError:
+        return None
+    # STEP 3: combine as an absolute url
+    img_url = f'https://astrogeology.usgs.gov{rel_url}'
+    
+    return title, img_url
+
+
 # ----------------------------------------------------------------
 # ## Web Scrape the latest news from NASA Mars news website
 # - (auto visit a website to extract string results)
@@ -99,11 +141,9 @@ def mars_facts():
     df.set_index('description', inplace=True)
     # Convert dataframe into HTML format, add bootstrap
     
-    return df.to_html()
+    return df.to_html(classes="table table-striped")
+
 
 # in case run this as python script
 if __name__ == "__main__":
-
     print(scrape_all())
-
-
